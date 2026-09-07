@@ -16,18 +16,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
-        // CORS
         $middleware->append(
             \Illuminate\Http\Middleware\HandleCors::class
         );
 
-        // Custom middleware aliases
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'sanctum.cookie' => UseSanctumTokenFromCookie::class,
         ]);
 
-        // Redirect guests
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('api/*')) {
                 return null;
