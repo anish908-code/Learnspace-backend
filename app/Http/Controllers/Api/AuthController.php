@@ -211,35 +211,37 @@ class AuthController extends Controller
 
     private function buildAuthCookie(string $token): Cookie
     {
-        $domain = config('session.domain') ?: null;
+        $secure = request()->secure() || app()->environment('production');
+        $sameSite = $secure ? 'none' : 'lax';
 
         return cookie(
             config('sanctum.token_cookie', 'learnspace_token'),
             $token,
             (int) config('sanctum.expiration', 10080),
             config('session.path', '/'),
-            $domain,
-            (bool) config('session.secure', false),
+            config('session.domain') ?: null,
+            $secure,
             (bool) config('session.http_only', true),
             false,
-            config('session.same_site', 'lax'),
+            $sameSite,
         );
     }
 
     private function clearAuthCookie(): Cookie
     {
-        $domain = config('session.domain') ?: null;
+        $secure = request()->secure() || app()->environment('production');
+        $sameSite = $secure ? 'none' : 'lax';
 
         return cookie(
             config('sanctum.token_cookie', 'learnspace_token'),
             '',
             -1,
             config('session.path', '/'),
-            $domain,
-            (bool) config('session.secure', false),
+            config('session.domain') ?: null,
+            $secure,
             (bool) config('session.http_only', true),
             false,
-            config('session.same_site', 'lax'),
+            $sameSite,
         );
     }
 }
