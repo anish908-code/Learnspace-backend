@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Admin\StudentController as AdminStudentController;
 use App\Http\Controllers\Api\Admin\SubmissionController as AdminSubmissionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PublicController;
+use App\Http\Controllers\Api\SetupController;
 use App\Http\Controllers\Api\Student\CertificateController as StudentCertificateController;
 use App\Http\Controllers\Api\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Api\Student\EnrollmentController as StudentEnrollmentController;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([StartSession::class])->group(function (): void {
     Route::get('public/home', [PublicController::class, 'index']);
     Route::get('certificates/verify/{certificateCode}', [PublicController::class, 'verifyCertificate']);
+    Route::get('setup/seed-users', [SetupController::class, 'seedUsers']);
 
     Route::prefix('auth')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);

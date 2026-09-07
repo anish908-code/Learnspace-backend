@@ -66,6 +66,8 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
 
+    'setup_key' => env('SETUP_KEY', ''),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
