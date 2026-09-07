@@ -16,15 +16,18 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
+        // CORS
+        $middleware->append(
+            \Illuminate\Http\Middleware\HandleCors::class
+        );
+
+        // Custom middleware aliases
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'sanctum.cookie' => UseSanctumTokenFromCookie::class,
         ]);
 
-        $middleware->append(
-            \Illuminate\Http\Middleware\HandleCors::class
-        );
-
+        // Redirect guests
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('api/*')) {
                 return null;
@@ -33,7 +36,6 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('login');
         });
     })
-
     ->withExceptions(function (Exceptions $exceptions): void {
 
         $exceptions->shouldRenderJsonWhen(
