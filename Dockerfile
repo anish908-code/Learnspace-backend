@@ -27,13 +27,11 @@ COPY . .
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Apache rewrite
+# Enable Apache rewrite module
 RUN a2enmod rewrite
 
-# Laravel public folder
-RUN sed -i 's#DocumentRoot /var/www/html#DocumentRoot /var/www/html/public#' /etc/apache2/sites-available/000-default.conf
-
-RUN sed -i 's#<Directory /var/www/>#<Directory /var/www/html/public/>#' /etc/apache2/apache2.conf
+# Use proper Apache vhost that allows .htaccess front-controller rewrites
+COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Permissions
 RUN chown -R www-data:www-data /var/www/html/storage \
