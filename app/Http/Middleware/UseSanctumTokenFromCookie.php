@@ -14,7 +14,7 @@ class UseSanctumTokenFromCookie
 
         $token = $request->cookie($cookieName);
 
-        if (is_string($token) && $token !== '') {
+        if ($request->headers->missing('Authorization') && is_string($token) && $token !== '') {
             $token = urldecode($token);
 
             $request->headers->set(

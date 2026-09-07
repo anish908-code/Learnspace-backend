@@ -50,6 +50,7 @@ class AuthController extends Controller
             'message' => 'Registration successful',
             'user' => $user,
             'role' => $user->role,
+            'token' => $token,
         ], 201)->withCookie($this->buildAuthCookie($token));
     }
 
@@ -84,6 +85,7 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'user' => $user,
             'role' => $user->role,
+            'token' => $token,
         ])->withCookie($this->buildAuthCookie($token));
     }
 
