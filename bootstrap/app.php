@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'sanctum.cookie' => UseSanctumTokenFromCookie::class,
         ]);
 
+        $middleware->append(
+            \Illuminate\Http\Middleware\HandleCors::class
+        );
+
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('api/*')) {
                 return null;
@@ -29,11 +33,12 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('login');
         });
     })
+
     ->withExceptions(function (Exceptions $exceptions): void {
 
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) =>
-                $request->is('api/*') || $request->expectsJson()
+            fn(Request $request) =>
+            $request->is('api/*') || $request->expectsJson()
         );
     })
     ->create();
