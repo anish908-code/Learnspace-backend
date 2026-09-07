@@ -28,6 +28,7 @@ Route::middleware([StartSession::class])->group(function (): void {
     Route::get('public/home', [PublicController::class, 'index']);
     Route::get('certificates/verify/{certificateCode}', [PublicController::class, 'verifyCertificate']);
     Route::get('setup/seed-users', [SetupController::class, 'seedUsers']);
+    Route::post('setup/import-data', [SetupController::class, 'importData']);
 
     Route::prefix('auth')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);
