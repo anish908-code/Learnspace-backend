@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Admin\SubmissionController as AdminSubmissionContro
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PublicController;
 use App\Http\Controllers\Api\SetupController;
+use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\Student\CertificateController as StudentCertificateController;
 use App\Http\Controllers\Api\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Api\Student\EnrollmentController as StudentEnrollmentController;
@@ -41,6 +42,7 @@ Route::middleware([StartSession::class])->group(function (): void {
 Route::middleware([StartSession::class, 'sanctum.cookie', 'auth:sanctum'])->group(function (): void {
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('auth/user', [AuthController::class, 'user']);
+    Route::post('auth/upload-image', [UploadController::class, 'uploadImage']);
 
     Route::prefix('student')
         ->middleware('role:student')
