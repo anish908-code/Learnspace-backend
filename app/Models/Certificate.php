@@ -12,7 +12,6 @@ class Certificate extends Model
         'course_id',
         'project_id',
         'certificate_number',
-        'certificate_code',
         'issue_date',
         'score',
         'grade',
@@ -20,7 +19,6 @@ class Certificate extends Model
         'issued_by',
         'qr_code',
         'signatures',
-        'verification_url',
     ];
     protected $casts = [
         'issue_date' => 'date',

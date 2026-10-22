@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Support\ProfileImage;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
@@ -37,7 +38,21 @@ class StudentController extends Controller
             'skills' => 'nullable|string',
         ]);
 
+        // Purani photo ka path update se pehle pakad lo, warna overwrite ke baad
+        // naya value mil jayega aur delete karna impossible hoga.
+        $previousImage = $student->profile_image;
+
         $student->update($validated);
+
+        // Photo students aur users dono tables me rehti hai (admin ka student
+        // list users.profile_image padhta hai), isliye dono sync karo.
+        if (array_key_exists('profile_image', $validated)) {
+            ProfileImage::replace(
+                $request->user(),
+                $previousImage,
+                $validated['profile_image'] ?? null,
+            );
+        }
 
         return response()->json([
             'message' => 'Profile updated successfully',

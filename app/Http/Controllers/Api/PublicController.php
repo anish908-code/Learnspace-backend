@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Models\Lesson;
 use App\Models\User;
 
 class PublicController extends Controller
@@ -16,6 +17,7 @@ class PublicController extends Controller
             'learners' => User::where('role', 'student')->count(),
             'courses' => Course::count(),
             'enrollments' => Enrollment::count(),
+            'lessons' => Lesson::count(),
             'certificates' => Certificate::count(),
         ];
 
@@ -33,42 +35,4 @@ class PublicController extends Controller
         ]);
     }
 
-    // Public certificate verification - no authentication required
-    public function verifyCertificate($certificateCode)
-    {
-        $certificate = Certificate::with([
-            'student.user',
-            'course'
-        ])
-            ->where('certificate_code', $certificateCode)
-            ->orWhere('certificate_number', $certificateCode)
-            ->first();
-
-        if (!$certificate) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'Certificate not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'valid' => true,
-            'certificate' => [
-                'id' => $certificate->id,
-                'certificate_code' => $certificate->certificate_code,
-                'student' => [
-                    'name' => $certificate->student?->user?->name ?? 'Student',
-                ],
-                'course' => [
-                    'title' => $certificate->course?->title ?? 'Course',
-                ],
-                'issue_date' => $certificate->issue_date?->toDateString(),
-                'score' => $certificate->score !== null
-                    ? round((float) $certificate->score, 2)
-                    : null,
-                'grade' => $certificate->grade,
-                'issued_by' => $certificate->issued_by,
-            ],
-        ]);
-    }
 }

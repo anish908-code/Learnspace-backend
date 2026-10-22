@@ -25,14 +25,12 @@ return new class extends Migration
                   ->nullOnDelete();
 
             $table->string('certificate_number')->unique();
-            $table->string('certificate_code')->unique()->nullable();
             $table->date('issue_date');
             $table->decimal('score', 5, 2)->nullable();
             $table->string('grade')->nullable();
             $table->string('certificate_file')->nullable();
             $table->string('issued_by')->nullable();
             $table->string('qr_code')->nullable();
-            $table->string('verification_url')->nullable();
             $table->json('signatures')->nullable();
 
             $table->timestamps();

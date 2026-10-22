@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Api\Admin\CertificateController as AdminCertificateController;
 use App\Http\Controllers\Api\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Api\Admin\LessonController as AdminLessonController;
@@ -27,7 +28,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware([StartSession::class])->group(function (): void {
     Route::get('public/home', [PublicController::class, 'index']);
-    Route::get('certificates/verify/{certificateCode}', [PublicController::class, 'verifyCertificate']);
     Route::get('setup/seed-users', [SetupController::class, 'seedUsers']);
     Route::post('setup/import-data', [SetupController::class, 'importData']);
 
@@ -86,6 +86,8 @@ Route::middleware([StartSession::class, 'sanctum.cookie', 'auth:sanctum'])->grou
         ->group(function (): void {
             Route::get('students', [AdminStudentController::class, 'index']);
             Route::get('students/{id}', [AdminStudentController::class, 'show']);
+
+            Route::get('analytics', [AdminAnalyticsController::class, 'index']);
 
             Route::get('courses', [AdminCourseController::class, 'index']);
             Route::post('courses', [AdminCourseController::class, 'store']);

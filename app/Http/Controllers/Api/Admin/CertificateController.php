@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Enrollment;
 use App\Models\Notification;
+use App\Models\Project;
+use App\Models\Submission;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class CertificateController extends Controller
@@ -76,19 +77,29 @@ class CertificateController extends Controller
             ], 409);
         }
 
-        $certificateCode = 'LS-' . strtoupper(Str::random(8));
+        // Certificate sirf tabhi issue ho jab student ne course poora kiya ho
+        // aur project submission approved ho. warna adhoori certificate ban jayega.
+        $eligibility = $this->checkEligibility(
+            (int) $validated['student_id'],
+            (int) $validated['course_id'],
+            $validated['project_id'] ?? null,
+        );
 
-        $verificationUrl = URL::to('/certificates/verify/' . $certificateCode);
+        if ($eligibility['error']) {
+            return response()->json([
+                'message' => $eligibility['error'],
+            ], 422);
+        }
+
+        $enrollment = $eligibility['enrollment'];
+        $approvedSubmission = $eligibility['submission'];
+        $projectId = $approvedSubmission?->project_id ?? null;
 
         // Agar admin ne score/grade nahi diye, to enrollment ka final quiz score use karo
         $score = $validated['score'] ?? null;
         $grade = $validated['grade'] ?? null;
 
         if ($score === null || $grade === null) {
-            $enrollment = Enrollment::where('student_id', $validated['student_id'])
-                ->where('course_id', $validated['course_id'])
-                ->first();
-
             if ($enrollment?->final_quiz_score !== null) {
                 $score = $score ?? (float) $enrollment->final_quiz_score;
                 $grade = $grade ?? $this->computeGrade((float) $enrollment->final_quiz_score);
@@ -98,15 +109,13 @@ class CertificateController extends Controller
         $certificate = Certificate::create([
             'student_id' => $validated['student_id'],
             'course_id' => $validated['course_id'],
-            'project_id' => $validated['project_id'] ?? null,
+            'project_id' => $projectId,
             'certificate_number' => 'CERT-' . date('Y') . '-' . strtoupper(Str::random(8)),
-            'certificate_code' => $certificateCode,
             'issue_date' => $validated['issue_date'] ?? now()->toDateString(),
             'score' => $score,
             'grade' => $grade,
             'issued_by' => $validated['issued_by'] ?? null,
             'signatures' => $validated['signatures'] ?? [],
-            'verification_url' => $verificationUrl,
         ]);
 
         Notification::create([
@@ -137,6 +146,65 @@ class CertificateController extends Controller
         return response()->json([
             'message' => 'Certificate deleted successfully.'
         ]);
+    }
+
+    // Certificate eligibility: enrollment complete + project submission approved
+    private function checkEligibility(int $studentId, int $courseId, ?int $projectId = null): array
+    {
+        $enrollment = Enrollment::where('student_id', $studentId)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if (!$enrollment) {
+            return ['error' => 'Student is not enrolled in this course.'];
+        }
+
+        if (!$enrollment->completed) {
+            return ['error' => 'Course is not completed yet. Student must finish all lessons and pass the final quiz first.'];
+        }
+
+        // Course ka project nikalo. Admin ne specific project diya hai to use hi use karo,
+        // warna course ka pehla project maano.
+        $project = $projectId
+            ? Project::where('id', $projectId)->where('course_id', $courseId)->first()
+            : Project::where('course_id', $courseId)->orderBy('id')->first();
+
+        // Course me koi project hi nahi hai, to certificate project ke bina issue ho sakta hai
+        if (!$project) {
+            return [
+                'error' => null,
+                'enrollment' => $enrollment,
+                'submission' => null,
+            ];
+        }
+
+        $submission = Submission::where('student_id', $studentId)
+            ->where('project_id', $project->id)
+            ->where('status', 'approved')
+            ->latest('reviewed_at')
+            ->first();
+
+        if (!$submission) {
+            $pending = Submission::where('student_id', $studentId)
+                ->where('project_id', $project->id)
+                ->latest('submitted_at')
+                ->first();
+
+            if (!$pending) {
+                return ['error' => 'Student has not submitted the course project yet.'];
+            }
+
+            return [
+                'error' => 'Project submission is not approved yet. Current status: '
+                    . str_replace('_', ' ', $pending->status) . '.',
+            ];
+        }
+
+        return [
+            'error' => null,
+            'enrollment' => $enrollment,
+            'submission' => $submission,
+        ];
     }
 
     // Percentage score -> letter grade

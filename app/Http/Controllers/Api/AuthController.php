@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\ProfileImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -203,11 +204,19 @@ class AuthController extends Controller
         ]);
 
         $user = $request->user();
+        $previousImage = $user->profile_image;
+
         $user->update($validated);
+
+        // Purani photo ka file delete karo, warna har upload pe ek orphan
+        // file accumulate hoti rahegi.
+        if (array_key_exists('profile_image', $validated)) {
+            ProfileImage::replace($user, $previousImage, $validated['profile_image'] ?? null);
+        }
 
         return response()->json([
             'message' => 'Profile updated successfully',
-            'user'    => $user,
+            'user'    => $user->fresh(),
         ]);
     }
 
